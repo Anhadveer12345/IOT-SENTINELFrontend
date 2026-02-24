@@ -1,5 +1,7 @@
 // app.js — Navigation, init, analytics, device connect
-
+// Wake up Render backend on page load
+fetch('https://backend-iot-sentinel-2.onrender.com/health')
+  .catch(() => { });
 let currentPage = 'dashboard';
 
 // ── Check Login ───────────────────────────────
