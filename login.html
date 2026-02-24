@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Sentinel — Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #161616;
+            --surface2: #1c1c1c;
+            --border: #2a2a2a;
+            --border2: #333;
+            --text: #e8e8e8;
+            --text2: #888;
+            --text3: #444;
+            --green: #4caf50;
+            --red: #e53935;
+            --mono: 'Space Mono', monospace;
+            --sans: 'Syne', sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 48px 48px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-mark {
+            width: 28px;
+            height: 28px;
+            border: 1.5px solid #555;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px;
+            padding: 5px;
+        }
+
+        .brand-mark span {
+            background: #fff;
+            border-radius: 1px;
+        }
+
+        .brand-mark span:last-child {
+            background: #444;
+        }
+
+        .brand-text {
+            font-family: var(--mono);
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--text);
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--surface2);
+            border-radius: 6px;
+            padding: 3px;
+            margin-bottom: 28px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            color: var(--text2);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .tab.active {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            font-family: var(--mono);
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--text3);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .field input:focus {
+            border-color: #555;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            color: #000;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: #d0d0d0;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            background: rgba(229, 57, 53, 0.1);
+            border: 1px solid rgba(229, 57, 53, 0.2);
+            color: var(--red);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 10px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .success-msg {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            color: var(--green);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 10px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 24px 0;
+        }
+
+        .footer-text {
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 9px;
+            color: var(--text3);
+            margin-top: 20px;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+
+    <div class="brand">
+        <div class="brand-mark"><span></span><span></span><span></span><span></span></div>
+        <span class="brand-text">IOT·SENTINEL</span>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Secure Device Authentication Platform</div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('login')">Login</button>
+            <button class="tab" onclick="switchTab('signup')">Sign Up</button>
+        </div>
+
+        <div id="errorMsg" class="error-msg"></div>
+        <div id="successMsg" class="success-msg"></div>
+
+        <!-- Login Form -->
+        <div id="loginForm">
+            <div class="field">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="you@company.com" autocomplete="email" />
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
+                    onkeydown="if(event.key==='Enter') submitLogin()" />
+            </div>
+            <button class="btn" id="loginBtn" onclick="submitLogin()">Login</button>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signupForm" style="display:none">
+            <div class="field">
+                <label>Full Name</label>
+                <input type="text" id="signupName" placeholder="John Smith" />
+            </div>
+            <div class="field">
+                <label>Email</label>
+                <input type="email" id="signupEmail" placeholder="you@company.com" autocomplete="email" />
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="signupPassword" placeholder="Min 6 characters" autocomplete="new-password"
+                    onkeydown="if(event.key==='Enter') submitSignup()" />
+            </div>
+            <button class="btn" id="signupBtn" onclick="submitSignup()">Create Account</button>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        ML-Based Behavioral Authentication · EdgeIIoT Dataset<br>
+        RF Fingerprinting · CNN Spectrograms · LSTM Behavioral Profiling
+    </div>
+
+    <script>
+        const API_URL = 'https://backend-iot-sentinel-2.onrender.com';
+
+        // Redirect if already logged in
+        if (localStorage.getItem('iot_token')) {
+            window.location.href = 'index.html';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+            hideMessages();
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg; el.style.display = 'block';
+            document.getElementById('successMsg').style.display = 'none';
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg; el.style.display = 'block';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMsg').style.display = 'none';
+            document.getElementById('successMsg').style.display = 'none';
+        }
+
+        async function submitLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) { showError('Please fill in all fields'); return; }
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true; btn.textContent = 'Logging in...';
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) { showError(data.error || 'Login failed'); return; }
+                localStorage.setItem('iot_token', data.token);
+                localStorage.setItem('iot_user', JSON.stringify(data.user));
+                localStorage.setItem('iot_api_key', data.api_key);
+                showSuccess('Login successful! Redirecting...');
+                setTimeout(() => window.location.href = 'index.html', 800);
+            } catch (e) {
+                showError('Cannot reach backend. Make sure api.py is running.');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Login';
+            }
+        }
+
+        async function submitSignup() {
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            if (!name || !email || !password) { showError('Please fill in all fields'); return; }
+            if (password.length < 6) { showError('Password must be at least 6 characters'); return; }
+            const btn = document.getElementById('signupBtn');
+            btn.disabled = true; btn.textContent = 'Creating account...';
+            try {
+                const res = await fetch(`${API_URL}/auth/signup`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) { showError(data.error || 'Signup failed'); return; }
+                localStorage.setItem('iot_token', data.token);
+                localStorage.setItem('iot_user', JSON.stringify(data.user));
+                localStorage.setItem('iot_api_key', data.api_key);
+                showSuccess('Account created! Redirecting...');
+                setTimeout(() => window.location.href = 'index.html', 800);
+            } catch (e) {
+                showError('Cannot reach backend. Make sure api.py is running.');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Create Account';
+            }
+        }
+    </script>
+</body>
+
+</html>

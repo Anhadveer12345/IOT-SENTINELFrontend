@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Sentinel — Device Authentication</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <div class="bg-grid"></div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <div class="brand-mark"><span></span><span></span><span></span><span></span></div>
+      <span class="brand-text">IOT·SENTINEL</span>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="nav-link active" data-page="dashboard">Dashboard</a>
+      <a href="#" class="nav-link" data-page="sensors">Sensors</a>
+      <a href="#" class="nav-link" data-page="analytics">Analytics</a>
+      <a href="#" class="nav-link" data-page="alerts">
+        Alerts <span class="badge" id="alertBadge"></span>
+      </a>
+    </div>
+    <button class="btn-ghost small" onclick="logout()" style="margin-right:16px">Logout</button>
+    <div class="nav-status">
+      <div class="status-dot pulse" id="statusDot"></div>
+      <span class="status-text" id="statusText">INITIALIZING</span>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- Backend Status -->
+    <div class="backend-bar" id="backendBar">
+      <span class="dot"></span>
+      <span id="backendMsg">Connecting to backend at backend-iot-sentinel-2.onrender.com ...</span>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-left">
+        <div class="hero-tag">ML-Based Behavioral Authentication · EdgeIIoT Dataset</div>
+        <h1 class="hero-title">Secure<br><span>Intelligent</span><br>IoT Auth</h1>
+        <p class="hero-desc">
+          RF fingerprinting via Random Forest + CNN spectrograms.
+          LSTM behavioral profiling. Mean score ≥ 70% — trusted. Below — flagged.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary" id="runBtn" onclick="toggleAuth()">
+            ▶ &nbsp;Run Authentication
+          </button>
+          <button class="btn-ghost" onclick="showPage('analytics')">Analytics</button>
+          <button class="btn-ghost" onclick="showConnectModal()">+ Connect Device</button>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="trust-meter-card">
+          <span class="card-label">System Trust Score</span>
+          <span class="threshold-tag">Threshold: 70%</span>
+          <div class="trust-circle-wrap">
+            <svg class="trust-circle" viewBox="0 0 160 160">
+              <circle class="track" cx="80" cy="80" r="68" />
+              <circle class="progress" id="trustArc" cx="80" cy="80" r="68" />
+              <text class="score-text" x="80" y="74" text-anchor="middle" id="trustVal">--</text>
+              <text class="score-sub" x="80" y="90" text-anchor="middle">TRUST</text>
+            </svg>
+          </div>
+          <div class="trust-verdict" id="trustVerdict">AWAITING SCAN</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-value" id="statTotal">0</span>
+        <span class="stat-label">Devices</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value ok" id="statTrusted">0</span>
+        <span class="stat-label">Trusted</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value bad" id="statFlagged">0</span>
+        <span class="stat-label">Flagged</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value" id="statRF">--</span>
+        <span class="stat-label">RF Accuracy</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value" id="statCNN">--</span>
+        <span class="stat-label">CNN Accuracy</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value" id="statLSTM">--</span>
+        <span class="stat-label">LSTM Accuracy</span>
+      </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div class="dashboard-grid" id="pageDashboard">
+
+      <!-- Sensor Monitor -->
+      <div class="panel sensor-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Live Sensor Monitor</h2>
+          <div class="panel-controls">
+            <button class="ctrl-btn active" onclick="filterSensors('all', this)">All</button>
+            <button class="ctrl-btn" onclick="filterSensors('trusted', this)">Trusted</button>
+            <button class="ctrl-btn" onclick="filterSensors('flagged', this)">Flagged</button>
+          </div>
+        </div>
+        <div class="sensor-grid" id="sensorGrid"></div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="right-col">
+
+        <!-- RF + CNN -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">RF Spectrogram · CNN</h2>
+            <span class="panel-badge">RF + CNN</span>
+          </div>
+          <div class="spectrogram-wrap">
+            <canvas id="spectrogramCanvas" width="400" height="120"></canvas>
+          </div>
+          <div class="spec-axis">
+            <span>0 Hz</span><span>Frequency Domain</span><span>5 GHz</span>
+          </div>
+          <br>
+          <div class="model-scores">
+            <div class="score-row">
+              <span class="score-name">Random Forest</span>
+              <div class="score-track">
+                <div class="score-fill" id="rfFill"></div>
+              </div>
+              <span class="score-pct" id="rfPct">--</span>
+            </div>
+            <div class="score-row">
+              <span class="score-name">CNN Eval</span>
+              <div class="score-track">
+                <div class="score-fill cnn" id="cnnFill"></div>
+              </div>
+              <span class="score-pct" id="cnnPct">--</span>
+            </div>
+            <div class="score-row">
+              <span class="score-name">Mean Score</span>
+              <div class="score-track">
+                <div class="score-fill mean" id="meanFill"></div>
+              </div>
+              <span class="score-pct" id="meanPct">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LSTM -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Behavioral Profile · LSTM</h2>
+            <span class="panel-badge">LSTM</span>
+          </div>
+          <canvas id="lstmCanvas" width="400" height="100"></canvas>
+          <div class="lstm-metrics">
+            <div class="lm-item">
+              <span class="lm-label">Pattern</span>
+              <span class="lm-value" id="lmPattern">--</span>
+            </div>
+            <div class="lm-item">
+              <span class="lm-label">Drift</span>
+              <span class="lm-value" id="lmDrift">--</span>
+            </div>
+            <div class="lm-item">
+              <span class="lm-label">Anomaly</span>
+              <span class="lm-value" id="lmAnomaly">--</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Analytics Page -->
+    <div class="dashboard-grid hidden" id="pageAnalytics">
+      <div class="panel full-width">
+        <div class="panel-header">
+          <h2 class="panel-title">Analytics</h2>
+        </div>
+        <div class="analytics-grid">
+          <div class="analytics-chart-wrap">
+            <div class="chart-title">Authentication History</div>
+            <canvas id="historyChart" width="600" height="180"></canvas>
+          </div>
+          <div class="analytics-chart-wrap">
+            <div class="chart-title">Model Score Trend</div>
+            <canvas id="trendChart" width="600" height="180"></canvas>
+          </div>
+          <div class="analytics-chart-wrap">
+            <div class="chart-title">Attack Type Distribution</div>
+            <canvas id="attackChart" width="400" height="180"></canvas>
+          </div>
+          <div class="analytics-chart-wrap">
+            <div class="chart-title">Device Categories</div>
+            <canvas id="deviceChart" width="400" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensors Page -->
+    <div class="dashboard-grid hidden" id="pageSensors">
+      <div class="panel full-width">
+        <div class="panel-header">
+          <h2 class="panel-title">Sensor Registry</h2>
+          <span class="panel-badge">EDGEIIOT DATASET</span>
+        </div>
+        <div class="sensor-table-wrap">
+          <table class="sensor-table">
+            <thead>
+              <tr>
+                <th>Device ID</th>
+                <th>Type</th>
+                <th>Protocol</th>
+                <th>RF Score</th>
+                <th>CNN Score</th>
+                <th>LSTM Score</th>
+                <th>Mean Score</th>
+                <th>Status</th>
+                <th>Last Auth</th>
+              </tr>
+            </thead>
+            <tbody id="sensorTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Page -->
+    <div class="dashboard-grid hidden" id="pageAlerts">
+      <div class="panel full-width">
+        <div class="panel-header">
+          <h2 class="panel-title">Security Alerts</h2>
+          <button class="btn-ghost small" onclick="clearAlerts()">Clear All</button>
+        </div>
+        <div class="alerts-list" id="alertsList">
+          <div class="no-alerts">No alerts. System monitoring active.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Flag Modal -->
+  <div class="modal-overlay hidden" id="alertModal">
+    <div class="modal">
+      <div class="modal-icon">⚑</div>
+      <h2 class="modal-title">SECURITY FLAG</h2>
+      <p class="modal-sensor" id="modalDevice">--</p>
+      <p class="modal-desc" id="modalDesc">Trust score below threshold.</p>
+      <div class="modal-score-display">
+        <span class="modal-score-val" id="modalScore">--</span>
+        <span class="modal-score-label">MEAN SCORE</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-danger" onclick="dismissModal()">Dismiss</button>
+        <button class="btn-primary" onclick="dismissModal()">Re-check</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect Device Modal -->
+  <div class="modal-overlay hidden" id="connectModal">
+    <div class="modal" style="max-width:520px;text-align:left;padding:32px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <h2 class="modal-title" style="color:var(--text);font-size:13px">CONNECT YOUR DEVICE</h2>
+        <button class="btn-ghost small" onclick="closeConnectModal()">✕</button>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label class="card-label" style="display:block;margin-bottom:6px">Device ID</label>
+        <input id="connectDeviceId" type="text" placeholder="e.g. FACTORY-TEMP-01" style="width:100%;background:var(--surface2);border:1px solid var(--border2);
+                 color:var(--text);padding:10px 14px;border-radius:var(--radius);
+                 font-family:var(--mono);font-size:11px;outline:none;box-sizing:border-box" />
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label class="card-label" style="display:block;margin-bottom:6px">Device Type</label>
+        <select id="connectDeviceType" style="width:100%;background:var(--surface2);border:1px solid var(--border2);
+                 color:var(--text);padding:10px 14px;border-radius:var(--radius);
+                 font-family:var(--mono);font-size:11px;outline:none;box-sizing:border-box">
+          <option>Temperature Sensor</option>
+          <option>Humidity Sensor</option>
+          <option>Camera Module</option>
+          <option>Motion Detector</option>
+          <option>Smart Meter</option>
+          <option>Industrial PLC</option>
+          <option>Network Gateway</option>
+          <option>GPS Tracker</option>
+          <option>Gas Detector</option>
+          <option>Pressure Sensor</option>
+          <option>Vibration Sensor</option>
+          <option>Custom Device</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:20px"
+        onclick="generateConnectCode()">Generate Connection Code</button>
+
+      <div id="connectInstructions" class="hidden">
+        <div class="card-label" style="margin-bottom:8px">RUN THIS PYTHON SCRIPT ON YOUR DEVICE</div>
+        <div style="background:#000;border:1px solid var(--border);border-radius:var(--radius);
+                    padding:14px;font-family:var(--mono);font-size:9px;color:#ccc;
+                    word-break:break-all;line-height:1.8;max-height:220px;overflow-y:auto" id="connectCode"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-ghost" style="flex:1;justify-content:center" onclick="copyConnectCode()">Copy
+            Script</button>
+          <button class="btn-ghost" style="flex:1;justify-content:center" onclick="closeConnectModal()">Done</button>
+        </div>
+        <p style="font-family:var(--mono);font-size:8px;color:var(--text3);
+                  margin-top:12px;line-height:1.7">
+          Requirements: Python 3 + pip install requests<br>
+          Device will appear in dashboard within 30 seconds of running the script.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
